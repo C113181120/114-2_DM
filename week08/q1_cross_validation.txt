@@ -25,20 +25,21 @@ features = ['Engine_Power_kW', 'Speed_Over_Ground_knots', 'Distance_Traveled_nm'
 X = df_clean[features]
 y = df_clean['is_critical']
 
-# 2. 定義 4 種分類模型的 Pipeline (KNN、SVM、Logistic 需要標準化，決策樹不需要)
+# 2. 定義模型字典 (完全依照提示結構)
 models = {
-    'LogisticRegression': Pipeline([('scaler', StandardScaler()), ('clf', LogisticRegression(random_state=42))]),
-    'KNN': Pipeline([('scaler', StandardScaler()), ('clf', KNeighborsClassifier(n_neighbors=5))]),
-    'SVM': Pipeline([('scaler', StandardScaler()), ('clf', SVC(kernel='rbf', random_state=42))]),
-    'DecisionTree': Pipeline([('clf', DecisionTreeClassifier(max_depth=3, random_state=42))])
+    'LogisticRegression': LogisticRegression(max_iter=5000),
+    'KNN': KNeighborsClassifier(),
+    'SVM': SVC(),
+    'DecisionTree': DecisionTreeClassifier(random_state=42)
 }
 
-# 3. 執行 5 折交叉驗證並輸出結果
-print("=== 交叉驗證結果 ===")
+# 3. 使用 Pipeline 統一進行標準化與 5 折交叉驗證
+results = {}
 for name, model in models.items():
-    scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
-    scores_str = ", ".join([f"{s:.4f}" for s in scores])
-    print(f"{name}：5 次分數=[{scores_str}]  平均={scores.mean():.4f}  標準差={scores.std():.4f}")
+    pipe = Pipeline([('scaler', StandardScaler()), ('clf', model)])
+    scores = cross_val_score(pipe, X, y, cv=5, scoring='accuracy')
+    results[name] = scores
+    print(f"{name}：{scores}  平均={scores.mean():.4f}  標準差={scores.std():.4f}")
 
 === 交叉驗證結果 ===
 LogisticRegression：5 次分數=[0.9964, 0.9945, 1.0000, 0.9872, 0.9945]  平均=0.9945  標準差=0.0042
